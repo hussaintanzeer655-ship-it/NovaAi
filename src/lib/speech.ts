@@ -1,4 +1,18 @@
-// Speech utilities for Urdu + English text-to-speech and speech-to-text
+// Speech utilities for Urdu, Hindi + English text-to-speech and speech-to-text
+
+export type LanguageMode = "en" | "ur" | "hi";
+
+export function getLangCode(mode: LanguageMode): string {
+  switch (mode) {
+    case "ur": return "ur-PK";
+    case "hi": return "hi-IN";
+    default: return "en-US";
+  }
+}
+
+export function isRtlMode(mode: LanguageMode): boolean {
+  return mode === "ur";
+}
 
 export function isSpeechSynthesisSupported(): boolean {
   return typeof window !== "undefined" && "speechSynthesis" in window;
@@ -46,9 +60,11 @@ export function speak(text: string, opts: SpeakOptions = {}): void {
 
   const utterance = new SpeechSynthesisUtterance(cleanText);
 
-  // Detect language: Urdu Unicode range
+  // Detect language: Urdu and Hindi Unicode ranges
   const isUrdu = /[\u0600-\u06FF]/.test(text);
-  utterance.lang = opts.lang || (isUrdu ? "ur-PK" : "en-US");
+  const isHindi = /[\u0900-\u097F]/.test(text);
+  const detected = isUrdu ? "ur-PK" : isHindi ? "hi-IN" : "en-US";
+  utterance.lang = opts.lang || detected;
   utterance.rate = opts.rate ?? 0.9;
   utterance.pitch = opts.pitch ?? 1;
 

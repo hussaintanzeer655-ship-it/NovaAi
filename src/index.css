@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -61,4 +62,9 @@ body {
 [dir="rtl"] {
   font-family: 'Noto Naskh Arabic', 'Inter', sans-serif;
   text-align: right;
+}
+
+/* Hindi text rendering */
+[lang="hi"], .font-hindi {
+  font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
 }

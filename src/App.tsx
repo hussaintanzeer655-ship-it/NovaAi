@@ -7,7 +7,7 @@ import {
   X,
   Bot,
   Loader2,
-  Globe,
+  Languages,
   Volume2,
   Phone,
 } from "lucide-react";
@@ -23,6 +23,9 @@ import {
   stopSpeaking,
   isSpeechSynthesisSupported,
   isSpeechRecognitionSupported,
+  getLangCode,
+  isRtlMode,
+  type LanguageMode,
 } from "@/lib/speech";
 
 interface DisplayMessage {
@@ -40,7 +43,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
-  const [urduMode, setUrduMode] = useState(false);
+  const [langMode, setLangMode] = useState<LanguageMode>("en");
   const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0);
   const [autoSpeak, setAutoSpeak] = useState(false);
   const [loadingChat, setLoadingChat] = useState(false);
@@ -149,7 +152,7 @@ export default function App() {
       // Auto-speak if enabled
       if (autoSpeak && isSpeechSynthesisSupported()) {
         speak(result.response, {
-          lang: urduMode ? "ur-PK" : "en-US",
+          lang: getLangCode(langMode),
         });
       }
       } catch (err) {
@@ -161,7 +164,7 @@ export default function App() {
         setLoading(false);
       }
     },
-    [messages, loading, currentChatId, autoSpeak, urduMode]
+    [messages, loading, currentChatId, autoSpeak, langMode]
   );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -185,7 +188,7 @@ export default function App() {
     }
 
     interimRef.current = "";
-    const lang = urduMode ? "ur-PK" : "en-US";
+    const lang = getLangCode(langMode);
     recognizer.start(lang, {
       onResult: (text, isFinal) => {
         if (isFinal) {
@@ -226,6 +229,16 @@ export default function App() {
   const recognitionSupported = isSpeechRecognitionSupported();
 
   const isUrduText = /[\u0600-\u06FF]/.test(input);
+  const isHindiText = /[\u0900-\u097F]/.test(input);
+  const isRtl = isUrduText || isRtlMode(langMode);
+  const useHindiFont = isHindiText || langMode === "hi";
+
+  const langLabels: Record<LanguageMode, string> = {
+    en: "English",
+    ur: "اردو",
+    hi: "हिन्दी",
+  };
+  const langCycle: LanguageMode[] = ["en", "ur", "hi"];
 
   return (
     <div className="flex h-screen bg-slate-950 overflow-hidden">
@@ -281,25 +294,28 @@ export default function App() {
                   {currentChatId ? "Conversation" : "New Chat"}
                 </h2>
                 <p className="text-slate-500 text-xs hidden sm:block">
-                  {urduMode ? "اردو موڈ" : "English Mode"}
+                  {langLabels[langMode]} Mode
                 </p>
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Urdu mode toggle */}
+            {/* Language mode toggle */}
             <button
-              onClick={() => setUrduMode(!urduMode)}
+              onClick={() => {
+                const idx = langCycle.indexOf(langMode);
+                setLangMode(langCycle[(idx + 1) % langCycle.length]);
+              }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                urduMode
+                langMode !== "en"
                   ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                   : "bg-slate-800 text-slate-400 border border-slate-700 hover:text-white"
               }`}
-              title="Toggle Urdu mode"
+              title="Switch language (English / Urdu / Hindi)"
             >
-              <Globe className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{urduMode ? "اردو" : "English"}</span>
+              <Languages className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{langLabels[langMode]}</span>
             </button>
 
             {/* Auto-speak toggle */}
@@ -420,15 +436,21 @@ export default function App() {
                 placeholder={
                   isListening
                     ? "Listening..."
-                    : urduMode
+                    : langMode === "ur"
                     ? "اردو میں ٹائپ کریں یا بولیں..."
+                    : langMode === "hi"
+                    ? "हिंदी में टाइप करें या बोलें..."
                     : "Type your message, or use the mic to speak..."
                 }
                 rows={1}
-                dir={isUrduText || urduMode ? "rtl" : "ltr"}
+                dir={isRtl ? "rtl" : "ltr"}
                 className="flex-1 bg-transparent text-white text-sm py-3 pr-2 outline-none resize-none max-h-32 min-h-[44px] placeholder:text-slate-500"
                 style={{
-                  fontFamily: isUrduText || urduMode ? "'Noto Naskh Arabic', 'Arial', sans-serif" : "inherit",
+                  fontFamily: useHindiFont
+                    ? "'Noto Sans Devanagari', 'Inter', sans-serif"
+                    : isRtl
+                    ? "'Noto Naskh Arabic', 'Arial', sans-serif"
+                    : "inherit",
                 }}
                 disabled={loading}
               />
@@ -463,8 +485,11 @@ export default function App() {
             setLiveCallActive(false);
             setSidebarRefreshKey((k) => k + 1);
           }}
-          urduMode={urduMode}
-          onToggleUrdu={() => setUrduMode(!urduMode)}
+          langMode={langMode}
+          onToggleLang={() => {
+            const idx = langCycle.indexOf(langMode);
+            setLangMode(langCycle[(idx + 1) % langCycle.length]);
+          }}
         />
       )}
     </div>

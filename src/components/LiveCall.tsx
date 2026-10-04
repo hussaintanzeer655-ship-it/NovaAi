@@ -7,7 +7,7 @@ import {
   Volume2,
   Bot,
   Loader2,
-  Globe,
+  Languages,
   AudioLines,
 } from "lucide-react";
 import { sendToAi } from "@/lib/api";
@@ -17,12 +17,15 @@ import {
   stopSpeaking,
   isSpeechSynthesisSupported,
   isSpeechRecognitionSupported,
+  getLangCode,
+  isRtlMode,
+  type LanguageMode,
 } from "@/lib/speech";
 
 interface LiveCallProps {
   onEnd: () => void;
-  urduMode: boolean;
-  onToggleUrdu: () => void;
+  langMode: LanguageMode;
+  onToggleLang: () => void;
 }
 
 type CallPhase = "listening" | "thinking" | "speaking" | "idle";
@@ -33,7 +36,7 @@ interface CallTurn {
   text: string;
 }
 
-export default function LiveCall({ onEnd, urduMode, onToggleUrdu }: LiveCallProps) {
+export default function LiveCall({ onEnd, langMode, onToggleLang }: LiveCallProps) {
   const [phase, setPhase] = useState<CallPhase>("idle");
   const [muted, setMuted] = useState(false);
   const [liveTranscript, setLiveTranscript] = useState("");
@@ -43,7 +46,7 @@ export default function LiveCall({ onEnd, urduMode, onToggleUrdu }: LiveCallProp
 
   const recognizerRef = useRef<SpeechRecognizer | null>(null);
   const mutedRef = useRef(false);
-  const urduRef = useRef(urduMode);
+  const langRef = useRef(langMode);
   const activeRef = useRef(true);
   const phaseRef = useRef<CallPhase>("idle");
   const conversationRef = useRef<{ role: "user" | "assistant"; content: string }[]>([]);
@@ -51,9 +54,8 @@ export default function LiveCall({ onEnd, urduMode, onToggleUrdu }: LiveCallProp
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const turnsEndRef = useRef<HTMLDivElement>(null);
 
-  // Keep refs in sync
   useEffect(() => { mutedRef.current = muted; }, [muted]);
-  useEffect(() => { urduRef.current = urduMode; }, [urduMode]);
+  useEffect(() => { langRef.current = langMode; }, [langMode]);
   useEffect(() => { phaseRef.current = phase; }, [phase]);
 
   // Call timer
@@ -86,7 +88,7 @@ export default function LiveCall({ onEnd, urduMode, onToggleUrdu }: LiveCallProp
 
     setPhase("listening");
     setLiveTranscript("");
-    const lang = urduRef.current ? "ur-PK" : "en-US";
+    const lang = getLangCode(langRef.current);
 
     recognizer.start(lang, {
       onResult: (text, isFinal) => {
@@ -144,7 +146,7 @@ export default function LiveCall({ onEnd, urduMode, onToggleUrdu }: LiveCallProp
       // Speak the response
       setPhase("speaking");
       speak(result.response, {
-        lang: urduRef.current ? "ur-PK" : "en-US",
+        lang: getLangCode(langRef.current),
         rate: 0.95,
         onEnd: () => {
           if (!activeRef.current) return;
@@ -185,8 +187,10 @@ export default function LiveCall({ onEnd, urduMode, onToggleUrdu }: LiveCallProp
     }
 
     // Greeting
-    const greeting = urduRef.current
+    const greeting = langRef.current === "ur"
       ? "السلام علیکم! میں Nova AI ہوں۔ آپ کسی بھی موضوع پر بات کر سکتے ہیں۔ بتائیے، کیسے مدد کروں؟"
+      : langRef.current === "hi"
+      ? "नमस्ते! मैं Nova AI हूँ। आप किसी भी विषय पर बात कर सकते हैं। बताइए, मैं आपकी कैसे मदद कर सकता हूँ?"
       : "Hello! I'm Nova AI. You can talk to me about anything. How can I help you today?";
 
     const greetingTurn: CallTurn = { id: `a-greet-${Date.now()}`, role: "assistant", text: greeting };
@@ -194,7 +198,7 @@ export default function LiveCall({ onEnd, urduMode, onToggleUrdu }: LiveCallProp
 
     setPhase("speaking");
     speak(greeting, {
-      lang: urduRef.current ? "ur-PK" : "en-US",
+      lang: getLangCode(langRef.current),
       rate: 0.95,
       onEnd: () => {
         if (activeRef.current && !mutedRef.current) {
@@ -240,24 +244,34 @@ export default function LiveCall({ onEnd, urduMode, onToggleUrdu }: LiveCallProp
     }
   };
 
+  const isRtl = isRtlMode(langMode);
+  const langLabels: Record<LanguageMode, string> = { en: "English", ur: "اردو", hi: "हिन्दी" };
+
+  const phaseLabels: Record<CallPhase, string> = {
+    idle: langMode === "ur" ? "تروس رہا ہے..." : langMode === "hi" ? "बैठ गया..." : "Tap to speak...",
+    listening: langMode === "ur" ? "سن رہا ہوں..." : langMode === "hi" ? "सुन रहा हूँ..." : "Listening...",
+    thinking: langMode === "ur" ? "سوچ رہا ہوں..." : langMode === "hi" ? "सोच रहा हूँ..." : "Thinking...",
+    speaking: langMode === "ur" ? "بول رہا ہوں..." : langMode === "hi" ? "बोल रहा हूँ..." : "Speaking...",
+  };
+
   const phaseConfig: Record<CallPhase, { label: string; color: string; ring: string }> = {
     idle: {
-      label: urduMode ? "تروس رہا ہے..." : "Tap to speak...",
+      label: phaseLabels.idle,
       color: "bg-slate-500",
       ring: "",
     },
     listening: {
-      label: urduMode ? "سن رہا ہوں..." : "Listening...",
+      label: phaseLabels.listening,
       color: "bg-emerald-500",
       ring: "ring-4 ring-emerald-500/30 animate-pulse",
     },
     thinking: {
-      label: urduMode ? "سوچ رہا ہوں..." : "Thinking...",
+      label: phaseLabels.thinking,
       color: "bg-amber-500",
       ring: "ring-4 ring-amber-500/30",
     },
     speaking: {
-      label: urduMode ? "بول رہا ہوں..." : "Speaking...",
+      label: phaseLabels.speaking,
       color: "bg-cyan-500",
       ring: "ring-4 ring-cyan-500/30 animate-pulse",
     },
@@ -298,17 +312,17 @@ export default function LiveCall({ onEnd, urduMode, onToggleUrdu }: LiveCallProp
             {formatTime(callDuration)}
           </div>
 
-          {/* Urdu toggle */}
+          {/* Language toggle */}
           <button
-            onClick={onToggleUrdu}
+            onClick={onToggleLang}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              urduMode
+              langMode !== "en"
                 ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                 : "bg-slate-800 text-slate-400 border border-slate-700 hover:text-white"
             }`}
           >
-            <Globe className="w-3.5 h-3.5" />
-            {urduMode ? "اردو" : "English"}
+            <Languages className="w-3.5 h-3.5" />
+            {langLabels[langMode]}
           </button>
         </div>
       </div>
@@ -338,29 +352,29 @@ export default function LiveCall({ onEnd, urduMode, onToggleUrdu }: LiveCallProp
         {/* Live transcript */}
         <div className="max-w-lg w-full mb-6 min-h-[80px] flex flex-col items-center justify-center">
           {phase === "listening" && liveTranscript ? (
-            <p className="text-white text-lg text-center font-medium" dir={urduMode ? "rtl" : "ltr"}>
+            <p className="text-white text-lg text-center font-medium" dir={isRtl ? "rtl" : "ltr"}>
               "{liveTranscript}"
             </p>
           ) : phase === "thinking" ? (
             <div className="flex items-center gap-2 text-amber-400">
               <Loader2 className="w-5 h-5 animate-spin" />
-              <span className="text-sm font-medium">{urduMode ? "سوچ رہا ہوں..." : "Thinking..."}</span>
+              <span className="text-sm font-medium">{phaseLabels.thinking}</span>
             </div>
           ) : phase === "speaking" && turns.length > 0 ? (
             <div className="text-center">
               <p className="text-slate-400 text-xs mb-2 flex items-center justify-center gap-1.5">
                 <Volume2 className="w-3.5 h-3.5 text-cyan-400" />
-                {urduMode ? "جواب دے رہا ہوں..." : "Speaking..."}
+                {phaseLabels.speaking}
               </p>
-              <p className="text-slate-200 text-sm leading-relaxed line-clamp-3" dir={urduMode ? "rtl" : "ltr"}>
+              <p className="text-slate-200 text-sm leading-relaxed line-clamp-3" dir={isRtl ? "rtl" : "ltr"}>
                 {turns[turns.length - 1]?.text}
               </p>
             </div>
           ) : (
             <p className="text-slate-500 text-sm text-center">
               {muted
-                ? urduMode ? "مائیک بند ہے — دوبارہ بولنے کے لیے آن کریں" : "Microphone is muted — unmute to talk"
-                : urduMode ? "بات کرنا شروع کریں..." : "Start speaking..."}
+                ? langMode === "ur" ? "مائیک بند ہے — دوبارہ بولنے کے لیے آن کریں" : langMode === "hi" ? "माइक बंद है — बोलने के लिए ऑन करें" : "Microphone is muted — unmute to talk"
+                : langMode === "ur" ? "بات کرنا شروع کریں..." : langMode === "hi" ? "बोलना शुरू करें..." : "Start speaking..."}
             </p>
           )}
         </div>
@@ -374,7 +388,7 @@ export default function LiveCall({ onEnd, urduMode, onToggleUrdu }: LiveCallProp
               <div
                 key={turn.id}
                 className={`text-xs leading-relaxed ${turn.role === "user" ? "text-right" : "text-left"}`}
-                dir={urduMode ? "rtl" : "ltr"}
+                dir={isRtl ? "rtl" : "ltr"}
               >
                 <span
                   className={`inline-block max-w-[85%] px-3 py-1.5 rounded-lg ${
@@ -445,8 +459,10 @@ export default function LiveCall({ onEnd, urduMode, onToggleUrdu }: LiveCallProp
         </div>
 
         <p className="text-center text-slate-600 text-[11px] mt-4">
-          {urduMode
+          {langMode === "ur"
             ? "بات ختم کرنے کے لیے ریڈ بٹن دبائیں • مائیک بند/کھولنے کے لیے مائیک بٹن"
+            : langMode === "hi"
+            ? "कॉल समाप्त करने के लिए लाल बटन दबाएं • माइक बटन से माइक ऑन/ऑफ करें"
             : "Press the red button to end call • Toggle mic with the mic button"}
         </p>
       </div>

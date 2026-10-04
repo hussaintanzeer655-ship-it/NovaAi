@@ -1,4 +1,4 @@
-import { Code, FileText, Languages, Mic, Phone, Sparkles, Bot } from "lucide-react";
+import { Code, FileText, Languages, Phone, Sparkles, Bot } from "lucide-react";
 
 interface WelcomeScreenProps {
   onPromptClick: (prompt: string) => void;
@@ -17,6 +17,12 @@ const suggestions = [
     title: "Chat in Urdu",
     prompt: "اردو میں میرے ساتھ بات کریں اور ایک مختصر کہانی سنائیں",
     color: "from-emerald-400 to-teal-500",
+  },
+  {
+    icon: Languages,
+    title: "हिंदी में बात करें",
+    prompt: "हिंदी में मेरे साथ बात करें और एक छोटी कहानी सुनाएं",
+    color: "from-orange-400 to-amber-500",
   },
   {
     icon: FileText,
@@ -44,7 +50,7 @@ export default function WelcomeScreen({ onPromptClick, onStartCall }: WelcomeScr
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Nova AI</h1>
           <p className="text-slate-400 text-base max-w-md mx-auto">
-            Your all-in-one AI assistant. Chat, code, speak Urdu, and generate PDFs — all in one place.
+            Your all-in-one AI assistant. Chat, code, speak Urdu, Hindi, and generate PDFs — all in one place.
           </p>
         </div>
 
@@ -52,7 +58,7 @@ export default function WelcomeScreen({ onPromptClick, onStartCall }: WelcomeScr
         <div className="flex flex-wrap justify-center gap-2 mb-10">
           {[
             { icon: Code, label: "Coding" },
-            { icon: Languages, label: "Urdu + English" },
+            { icon: Languages, label: "Urdu + Hindi + English" },
             { icon: FileText, label: "PDF Export" },
             { icon: Phone, label: "Live Call" },
           ].map((feat) => (

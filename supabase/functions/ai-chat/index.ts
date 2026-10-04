@@ -88,9 +88,13 @@ Deno.serve(async (req: Request) => {
 function generateResponse(userMsg: string, history: string[]): string {
   const lower = userMsg.toLowerCase().trim();
   const isUrdu = /[\u0600-\u06FF]/.test(userMsg);
+  const isHindi = /[\u0900-\u097F]/.test(userMsg);
 
   // Urdu conversations
   if (isUrdu) return urduResponse(userMsg, lower);
+
+  // Hindi conversations
+  if (isHindi) return hindiResponse(userMsg, lower);
 
   // Greetings
   if (isGreeting(lower)) return greetingResponse();
@@ -233,6 +237,114 @@ print("تقسیم:", divide(10, 5))
 اپنا سوال مزید واضح کریں تاکہ میں بہترین جواب دے سکوں۔`;
 }
 
+// ─── Hindi ─────────────────────────────────────────────────────────────────
+
+function hindiResponse(userMsg: string, lower: string): string {
+  // Greetings in Hindi
+  if (/(नमस्ते|नमस्कार|हेलो|हाय|hello|hi|good morning|good evening)/i.test(userMsg)) {
+    return `नमस्ते! 🌟
+
+आपका स्वागत है! मैं Nova AI हूँ — आपका अपना AI सहायक। मैं आपकी इन चीज़ों में मदद कर सकता हूँ:
+
+- **कोडिंग** — किसी भी प्रोग्रामिंग भाषा में कोड लिखना
+- **हिंदी बातचीत** — हिंदी में स्वतंत्र रूप से बात करना
+- **PDF बनाना** — डाउनलोड करने योग्य PDF दस्तावेज़ बनाना
+- **सामान्य ज्ञान** — किसी भी विषय पर जानकारी देना
+
+बताइए, मैं आपकी कैसे मदद कर सकता हूँ?`;
+  }
+
+  // Identity in Hindi
+  if (/(कौन हो|तुम कौन|आप कौन|तुम्हारा नाम|आपका नाम|who are you)/i.test(userMsg)) {
+    return `मैं Nova AI हूँ — एक सर्वशक्तिमान AI सहायक। मैं कोडिंग, हिंदी बातचीत, PDF बनाने और सामान्य ज्ञान में आपकी मदद कर सकता हूँ। मैं इंसानों की तरह सोचने की कोशिश करता हूँ और आपके सवालों का सबसे अच्छा जवाब देने की कोशिश करता हूँ।`;
+  }
+
+  // How are you in Hindi
+  if (/(कैसे हो|कैसे हैं|how are you|क्या हाल)/i.test(userMsg)) {
+    return `मैं बहुत अच्छा हूँ, आपका पूछने के लिए धन्यवाद! 💙
+
+मैं हमेशा आपकी मदद के लिए तैयार हूँ। बताइए आप क्या जानना चाहते हैं?`;
+  }
+
+  // Story request in Hindi
+  if (/(कहानी|story|कथा)/i.test(userMsg)) {
+    return `# एक छोटी कहानी
+
+## सच्चा दोस्त
+
+एक बार की बात है, एक गाँव में दो दोस्त रहते थे — अमित और राहुल। वे बचपन से साथ खेलते थे और बड़े होकर भी एक-दूसरे के साथ रहते थे।
+
+एक दिन अमित को एक मुसीबत आ पड़ी। उसके कारोबार में नुकसान हुआ और वह बहुत परेशान हो गया। राहुल ने जब यह सुना तो वे तुरंत अमित के पास गए और कहा:
+
+*"दोस्त, मुसीबतें ज़िंदगी का हिस्सा हैं। हम मिलकर इस समस्या का समाधान निकालेंगे।"*
+
+राहुल ने अमित की आर्थिक मदद की और उसे नया कारोबार शुरू करने में मदद की। कुछ समय बाद अमित का कारोबार सफल हो गया।
+
+अमित ने राहुल से कहा: *"तुमने मेरे साथ जो किया, उसे मैं कभी नहीं भूलूँगा।"*
+
+राहुल ने मुस्कुराते हुए कहा: *"दोस्ती का मतलब है हर हाल में साथ रहना — खुशी में भी और मुसीबत में भी।"*
+
+**सबक:** सच्चा दोस्त वही होता है जो मुश्किल वक्त में साथ दे।`;
+  }
+
+  // Weather in Hindi
+  if (/(मौसम|weather|हवा)/i.test(userMsg)) {
+    return `माफ़ करें, मैं मौसम की जानकारी सीधे तौर पर नहीं दे सकता क्योंकि मुझे रियल-टाइम मौसम डेटा तक पहुँच नहीं है।
+
+लेकिन आप अपने फ़ोन के मौसम ऐप या Google पर अपने शहर का नाम लिखकर मौसम देख सकते हैं।
+
+अगर आप मुझे बताएँ कि आप किस शहर में हैं, तो मैं आपको उस मौसम में क्या करना चाहिए, उसके सुझाव दे सकता हूँ।`;
+  }
+
+  // Hindi code request
+  if (/(कोड|code|प्रोग्राम|program)/i.test(userMsg)) {
+    return `ज़रूर! मैं आपके लिए कोड लिख सकता हूँ। बताइए:
+
+1. आप कौन-सी प्रोग्रामिंग भाषा इस्तेमाल करना चाहते हैं? (Python, JavaScript, Java, आदि)
+2. आप कोड से क्या करना चाहते हैं?
+
+उदाहरण के लिए, अगर आप Python में एक कैलकुलेटर चाहते हैं:
+
+\`\`\`python
+# साधारण कैलकुलेटर
+def add(a, b):
+    return a + b
+
+def subtract(a, b):
+    return a - b
+
+def multiply(a, b):
+    return a * b
+
+def divide(a, b):
+    if b == 0:
+        return "शून्य से विभाजन नहीं हो सकता"
+    return a / b
+
+print("जोड़:", add(10, 5))
+print("घटाव:", subtract(10, 5))
+print("गुणा:", multiply(10, 5))
+print("विभाजन:", divide(10, 5))
+\`\`\`
+
+अपना सवाल अंग्रेज़ी या हिंदी में पूछें!`;
+  }
+
+  // General Hindi response
+  return `आपने पूछा: "${userMsg}"
+
+मैं आपके सवाल को समझ गया हूँ। यहाँ मेरा जवाब है:
+
+मैं Nova AI हूँ और मैं आपकी अलग-अलग तरीकों से मदद कर सकता हूँ:
+
+- अगर आपको **कोड** चाहिए तो बताइए कौन-सी भाषा में और क्या करना है
+- अगर आप **PDF** बनवाना चाहते हैं तो बताइए किस विषय पर
+- अगर आपको **जानकारी** चाहिए तो बताइए किस बारे में
+- अगर आप **हिंदी में बात** करना चाहते हैं तो मैं तैयार हूँ
+
+अपने सवाल को और स्पष्ट करें ताकि मैं बेहतरीन जवाब दे सकूँ।`;
+}
+
 // ─── Greetings ─────────────────────────────────────────────────────────────
 
 function isGreeting(lower: string): boolean {
@@ -246,6 +358,7 @@ Here's what I can do for you:
 
 - **Coding** — I can write code in Python, JavaScript, TypeScript, Java, C++, HTML/CSS, and more. Just tell me what you need!
 - **Urdu (اردو)** — I can chat with you fluently in Urdu. Just switch to Urdu mode or type in Urdu.
+- **Hindi (हिंदी)** — I can chat with you fluently in Hindi. Just switch to Hindi mode or type in Hindi.
 - **PDF Generation** — Ask me to create a PDF and I'll generate formatted content you can download as a PDF document.
 - **General Knowledge** — Ask me about science, history, technology, health, business, or any topic.
 - **Voice Chat** — Use the microphone button to speak to me, and I can speak back!
@@ -263,7 +376,7 @@ function identityResponse(): string {
   return `I'm **Nova AI**, a versatile AI assistant built to help you with almost anything. Here's what makes me special:
 
 1. **I can code** — Give me a problem and I'll write complete, working code in the language of your choice
-2. **I speak Urdu** — I can communicate fluently in both English and Urdu (اردو)
+2. **I speak Urdu & Hindi** — I can communicate fluently in English, Urdu (اردو), and Hindi (हिंदी)
 3. **I make PDFs** — Ask me to create a document and I'll format it for PDF download
 4. **I have voice** — You can talk to me using the mic button, and I can read responses aloud
 5. **I remember** — Our conversations are saved, so you can come back to them anytime
@@ -292,6 +405,12 @@ Just tell me what you want to build or what problem you need solved.
 - Translate between English and Urdu
 - Write stories, poems, and essays in Urdu
 - Toggle Urdu mode in the header for a full Urdu experience
+
+## Hindi Language (हिंदी)
+- Chat fluently in Hindi
+- Translate between English and Hindi
+- Write stories, poems, and essays in Hindi
+- Toggle Hindi mode in the header for a full Hindi experience
 
 ## PDF Generation
 - Ask me to "make a PDF" on any topic
