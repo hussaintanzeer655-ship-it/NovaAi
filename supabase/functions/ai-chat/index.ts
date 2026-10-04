@@ -96,6 +96,9 @@ function generateResponse(userMsg: string, history: string[]): string {
   // Hindi conversations
   if (isHindi) return hindiResponse(userMsg, lower);
 
+  // Creator / father questions
+  if (isCreatorQuestion(lower)) return creatorResponse();
+
   // Greetings
   if (isGreeting(lower)) return greetingResponse();
 
@@ -144,6 +147,11 @@ function urduResponse(userMsg: string, lower: string): string {
 - **عمومی معلومات** — کسی بھی موضوع پر معلومات دینا
 
 بتائیے، میں آپ کی کیسے مدد کر سکتا ہوں؟`;
+  }
+
+  // Creator / father in Urdu
+  if (/(کس نے بنایا|کون بنایا|آپ کا خالق|آپ کے باپ|تمہارا باپ|تیرا باپ|creator|father)/i.test(userMsg)) {
+    return `مجھے Haji Sahgeer نے بنایا ہے۔ وہ ہی میرے خالق اور والد ہیں۔ 🤍`;
   }
 
   // Identity in Urdu
@@ -252,6 +260,11 @@ function hindiResponse(userMsg: string, lower: string): string {
 - **सामान्य ज्ञान** — किसी भी विषय पर जानकारी देना
 
 बताइए, मैं आपकी कैसे मदद कर सकता हूँ?`;
+  }
+
+  // Creator / father in Hindi
+  if (/(किसने बनाया|कौन बनाया|आपका निर्माता|आपके पिता|तुम्हारे पिता|तेरे पिता|creator|father)/i.test(userMsg)) {
+    return `मुझे Haji Sahgeer ने बनाया है। वही मेरे निर्माता और पिता हैं। 🤍`;
   }
 
   // Identity in Hindi
@@ -364,6 +377,16 @@ Here's what I can do for you:
 - **Voice Chat** — Use the microphone button to speak to me, and I can speak back!
 
 What would you like help with today?`;
+}
+
+// ─── Creator ──────────────────────────────────────────────────────────────
+
+function isCreatorQuestion(lower: string): boolean {
+  return /(who (made|created|built|developed) you|your creator|your father|father.?s name|who is your (dad|father)|who developed you|who owns you)/.test(lower);
+}
+
+function creatorResponse(): string {
+  return `I was created by **Haji Sahgeer**. He is my creator and father. 🤍`;
 }
 
 // ─── Identity ──────────────────────────────────────────────────────────────
