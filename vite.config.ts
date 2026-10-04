@@ -4,7 +4,7 @@ import { fileURLToPath, URL } from 'node:url';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/NovaAI/'
+  base: '/NovaAI/',
   plugins: [react()],
   resolve: {
     alias: {
@@ -15,5 +15,3 @@ export default defineConfig({
     exclude: ['lucide-react'],
   },
 });
-
-'/NovaAI/'
